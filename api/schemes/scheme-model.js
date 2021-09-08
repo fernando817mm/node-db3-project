@@ -1,24 +1,6 @@
 const db = require("../../data/db-config");
 
 function find() {
-  // EXERCISE A
-  /*
-    1A- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`.
-    What happens if we change from a LEFT join to an INNER join?
-
-      SELECT
-          sc.*,
-          count(st.step_id) as number_of_steps
-      FROM schemes as sc
-      LEFT JOIN steps as st
-          ON sc.scheme_id = st.scheme_id
-      GROUP BY sc.scheme_id
-      ORDER BY sc.scheme_id ASC;
-
-    2A- When you have a grasp on the query go ahead and build it in Knex.
-    Return from this function the resulting dataset.
-  */
-
   return db("schemes")
     .leftJoin("steps", "schemes.scheme_id", "=", "steps.scheme_id")
     .select("schemes.*")
@@ -27,8 +9,30 @@ function find() {
     .orderBy("scheme_id", "asc");
 }
 
-function findById(scheme_id) {
-  // EXERCISE B
+async function findById(scheme_id) {
+  const rows = await db("schemes")
+    .leftJoin("steps", "schemes.scheme_id", "steps.scheme_id")
+    .where("schemes.scheme_id", scheme_id)
+    .select("steps.*", "schemes.scheme_name", "schemes.scheme_id")
+    .orderBy("steps.step_number");
+
+  const result = {
+    scheme_id: rows[0].scheme_id,
+    scheme_name: rows[0].scheme_name,
+    steps: [],
+  };
+
+  rows.map((row) => {
+    row.step_id
+      ? result.steps.push({
+          step_id: row.step_id,
+          step_number: row.step_number,
+          instructions: row.instructions,
+        })
+      : [];
+  });
+
+  return result;
   /*
     1B- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`:
 
